@@ -1,31 +1,26 @@
-
+from Scripts import Menu_interactions as menu
 
 # Press the green button in the gutter to run the script.
 
-def print_menu(menu_options) :
-    for key in menu_options.keys() :
-        print('[',key,']    ',menu_options[key])
-
-def check_choice(choice):
-    if choice = '1' :
-
+def print_menu(options) :
+    for key in options.keys() :
+        print('[',key,']    ',options[key])
+    return input("Enter your choice :   ")
 
 if __name__ == '__main__':
-    menu_options = {
-        1: 'Chiffrer/Déchiffrer des messages',
-        2: 'Créer un couple de clé publique/privée',
-        3: 'Signer un certificat',
-        4: 'Vérifier un certificat',
-        5: 'Envoyer un message de façon asynchrone',
-        6: 'Demander une preuve de connaissance'
-        7: 'Quitter'
+    options = {
+        1: 'Encrypt/Decrypt a message',
+        2: 'Create a pair of Public/Private keys (Generate a big prime number)',
+        3: 'Sign a certificate',
+        4: 'Verify a certificate',
+        5: 'Send a message asynchronously',
+        6: 'Ask for a knowledge proof',
+        7: 'Exit'
     }
 
     while True :
-        print_menu(menu_options)
-        choice = input("Enter your choice")
-
-        check_()
+        choice = print_menu(options)
+        menu.check_choice(choice)
 
 
 
