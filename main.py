@@ -1,4 +1,5 @@
 from Scripts import Menu_interactions as menu
+import os
 
 # Press the green button in the gutter to run the script.
 
@@ -19,6 +20,7 @@ if __name__ == '__main__':
     }
 
     while True :
+        os.system('cls')
         choice = print_menu(options)
         menu.check_choice(choice)
 
