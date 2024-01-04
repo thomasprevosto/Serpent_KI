@@ -45,6 +45,7 @@ def check_choice(choice):
             print('To do')
         case '5':
             print('To do')
+
         case '6':
             print('To do')
         case '7' | 'q' | 'quit' | 'exit':
