@@ -69,7 +69,9 @@ def input_console_message():
     if message_length < 128:
         #Pad the message with '0' if length < 128 bits
         message_bits.extend([0] * (128 - message_length))
-        return message_bits.to01()
+        blocks = [message_bits.to01()]
+        blocks.append(bin(message_length)[2:].zfill(128))
+        return blocks
     elif message_length == 128:
         return message_bits.to01()
     else:
@@ -81,11 +83,11 @@ def input_console_message():
             if len(blocks[i]) < 128:
                 blocks[i].extend([0] * (128 - len(blocks[i])))
             blocks[i] = blocks[i].to01()
+        blocks.append(bin(message_length)[2:].zfill(128))
         print(blocks)
         return blocks
 
-def read_file_convert():
-    file_path = input("File path : ")
+def read_file_convert(file_path):
     try:
         # Read the content of the file
         with open(file_path, 'rb') as file:
@@ -102,6 +104,8 @@ def read_file_convert():
         if file_length < 128:
             # Pad with 0 if block length < 128 bits
             file_bits.extend([0] * (128 - file_length))
+            blocks = [file_bits.to01()]
+            blocks.append(bin(file_length)[2:].zfill(128))
             return file_bits.to01()  # Return the bit string
         elif file_length == 128:
             return file_bits.to01()
@@ -116,6 +120,7 @@ def read_file_convert():
 
             for i in range(len(blocks)) :
                 blocks[i] = blocks[i].to01()
+            blocks.append(bin(file_length)[2:].zfill(128))
             return blocks  #Return list of blocks
 
     except FileNotFoundError:
@@ -132,19 +137,20 @@ def output_to_file(text):
             if isinstance(text, str):  # If Ciphertext is a string
                 text_bits = bitarray.bitarray(text)
                 file.write(text_bits.tobytes())
+                print(f"[*] Message : {text_bits.tobytes()}")
                 # text_bits.tofile(file)
             elif isinstance(text, list):  # If ciphertext is a list of strings
                 text_bits = bitarray.bitarray()
                 for block in text:
                     text_bits.extend(bitarray.bitarray(block))
                 file.write(text_bits.tobytes())
+                print(f"[*] Message : {text_bits.tobytes()}")
             else:
                 print("Bad Format.")
                 return False
 
         print(f"Serpent output located at : {file_path}")
         return True
-
     except Exception as e:
         print(f"File Writing Error : {e}")
         return False
@@ -188,7 +194,8 @@ def front_encryption() :
         choice = input("[1] - File encryption\n[2] - Message Encryption\n[3] - Cancel\n")
         match choice :
             case '1' :
-                message = read_file_convert()
+                file_path = input("File path : ")
+                message = read_file_convert(file_path)
                 break
             case '2' :
                 message = input_console_message()
@@ -219,7 +226,8 @@ def front_encryption() :
                 print("Choose a valid option")
 
 def front_decryption() :
-    message = read_file_convert()
+    file_path = input("File path : ")
+    message = read_file_convert(file_path)
     key_path = input("Path to key : ")
     master_key_bits = bitarray.bitarray()
     try:
@@ -383,18 +391,8 @@ def inverse_linear_transformation(block,key,inv_sbox):
 def encryption(data,master_key) :
     round_keys = generate_round_keys(master_key)
     sbox = sbox_generation(sbox0)
-    print(sbox)
-    if isinstance(data, str):  # If plaintext is a string
-        data = permutation_initiale(data)
-        block = linear_transformation(sbox[0],data, round_keys[0])
-        for i in range(1, 31):
-            block = linear_transformation(sbox[i],block, round_keys[i])
-        block = Last_Iteration(sbox[31],block, round_keys)
-        cipher = permutation_finale(block)
-        print("Cipher : ", cipher)
 
-
-    elif isinstance(data, list):  # If plaintext is a list of strings
+    if isinstance(data, list):  # If plaintext is a list of strings
         cipher = []
         for block in data :
             buffer = permutation_initiale(block)
@@ -414,18 +412,10 @@ def decryption(cipher,master_key) :
     round_keys = generate_round_keys(master_key)
     round_keys.reverse()
     inv_sbox = inverse_sbox_permutation()
-    print(cipher)
-    if isinstance(cipher, str):  # If ciphertext is a string
-        cipher = permutation_initiale(cipher)
-        cipher = reverse_last_iteration(cipher,round_keys,inv_sbox[0])
-        for i in range(1, 32):
-            cipher = inverse_linear_transformation(cipher, round_keys[i+1],inv_sbox[i])
-        plaintext = permutation_finale(cipher)
-        print("plaintext_bits : ", plaintext)
-        return plaintext
 
-    elif isinstance(cipher, list):  # If plaintext is a list of strings
+    if isinstance(cipher, list):  # If plaintext is a list of strings
         plaintext = []
+        cipher.pop(-1) #Remove useless last block introduced by the file reading padding
         for block in cipher:
             buffer = permutation_initiale(block)
             buffer = reverse_last_iteration(buffer,round_keys,inv_sbox[0])
@@ -433,12 +423,17 @@ def decryption(cipher,master_key) :
                 buffer = inverse_linear_transformation(buffer, round_keys[i+1],inv_sbox[i])
             buffer = permutation_finale(buffer)
             plaintext.append(buffer)
-        print("Plaintext_bits : ", plaintext)
-        return plaintext
+
+        padding = int(plaintext[-1],2)%128
+
+        plaintext.pop(-1)
+        PT = ''.join(plaintext)
+        PT = PT[:-padding]
+        print("Plaintext_bits : ", PT)
+        return PT
     else:
         print("Plaintext format is not valid")
     return cipher
-
 
 
 
