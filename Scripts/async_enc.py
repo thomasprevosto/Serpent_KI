@@ -174,6 +174,7 @@ def first_message(name,name2,users):
 
     users.append([name,name2,sk_1,pub_2,chain_key,1]) #Sender
     users.append([name2, name, sk_2, pub_1, "", 0]) #Receiver -- Message needs to be read
+    save_users(users)
     return users
 
 def message_user(users,name,name2):
@@ -185,8 +186,8 @@ def message_user(users,name,name2):
         print(f"[*]Creating communication between [{name}] and [{name2}] .........")
         first_message(name,name2,users)
     else:
-        user2_line,index = find_correspondence(users,name2,name)
-        if user_line[5] < user2_line[5]: #Messages must be first read to even the counter and the session keys
+        user2_line,index2 = find_correspondence(users,name2,name)
+        if int(user_line[5]) < int(user2_line[5]): #Messages must be first read to even the counter and the session keys
             message_counter = int(user2_line[5]) - int(user_line[5])
             print(f"You have {message_counter} message(s) waiting from {name2}, please read them in order before texting\n")
             return None
@@ -195,7 +196,7 @@ def message_user(users,name,name2):
             users[index][5] = int(users[index][5]) + 1 #Message counter update
             users[index][4] = chain_key
             save_users(users)
-            return None
+            return users
 
 """-----Message reading functions-----"""
 def message_decryption(name2,chain_key,message):
@@ -210,17 +211,16 @@ def read_message(users):
     file_path = input("Path to the message (.enc) : ")
     message = read_file_convert(file_path)
     name_f, name2_f, counter_f = parse_filename(file_path)
-    print(name_f,name2_f,counter_f)
     user_line,index = find_correspondence(users,name_f,name2_f)
-    if int(counter_f) <= (int(user_line[5])+1):
+    if int(counter_f) == 1 and (int(user_line[5]) == 0):
+        #First message to be read from the other user --> the DH output rootkey needs to be calculated
+        rootkey = DH(int(user_line[2]),int(user_line[3]))
+        chain_key = message_decryption(name2_f,rootkey,message)
+    elif int(counter_f) < (int(user_line[5])+1):
         #Prevent user from reading a message out of order (ratchet key will change and former message will be lost)
         inbox = int(counter_f) - int(user_line[5])
         print(f"Message can't be read --- Please read the messages in order\n{inbox} message(s) from {name2_f} in inbox")
         return
-    elif int(counter_f) == 1:
-        #First message to be read from the other user --> the DH output rootkey needs to be calculated
-        rootkey = DH(user_line[2],user_line[3])
-        chain_key = message_decryption(name2_f,rootkey,message)
     else:
         chain_key = message_decryption(name2_f,user_line[4],message)
     #Update the database about the ratchet
@@ -239,11 +239,10 @@ if __name__ == '__main__':
             case "1":
                 name,name2 = create_user(users)
                 users = first_message(name,name2,users)
-                save_users(users)
             case "2" :
                 name = input("[+] LOGIN : ")
                 name2 = input("Send a message to : ")
-                message_user(users,name,name2)
+                users = message_user(users,name,name2)
             case "3":
                 read_message(users)
             case "q" | "exit" | "quit" | '4':

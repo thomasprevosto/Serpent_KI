@@ -68,9 +68,10 @@ def input_console_message():
     # Padding
     if message_length < 128:
         #Pad the message with '0' if length < 128 bits
-        message_bits.extend([0] * (128 - message_length))
+        message_padding = 128 - message_length
+        message_bits.extend([0] * message_padding)
         blocks = [message_bits.to01()]
-        blocks.append(bin(message_length)[2:].zfill(128))
+        blocks.append(bin(message_padding)[2:].zfill(128))
         return blocks
     elif message_length == 128:
         return message_bits.to01()
@@ -79,12 +80,13 @@ def input_console_message():
         blocks = [message_bits[i:i + 128] for i in range(0, message_length, 128)]
 
         #Padding
+        message_padding = 0
         for i in range(len(blocks)):
             if len(blocks[i]) < 128:
-                blocks[i].extend([0] * (128 - len(blocks[i])))
+                message_padding = 128 - len(blocks[i])
+                blocks[i].extend([0] * message_padding)
             blocks[i] = blocks[i].to01()
-        blocks.append(bin(message_length)[2:].zfill(128))
-        print(blocks)
+        blocks.append(bin(message_padding)[2:].zfill(128))
         return blocks
 
 def read_file_convert(file_path):
@@ -99,13 +101,14 @@ def read_file_convert(file_path):
 
         # Check file length
         file_length = len(file_bits)
-        print(file_length)
         # Apply padding
         if file_length < 128:
             # Pad with 0 if block length < 128 bits
-            file_bits.extend([0] * (128 - file_length))
+            file_padding = (128 - file_length)
+            file_bits.extend([0] * file_padding)
             blocks = [file_bits.to01()]
-            blocks.append(bin(file_length)[2:].zfill(128))
+
+            blocks.append(bin(file_padding)[2:].zfill(128))
             return file_bits.to01()  # Return the bit string
         elif file_length == 128:
             return file_bits.to01()
@@ -114,13 +117,16 @@ def read_file_convert(file_path):
             blocks = [file_bits[i:i + 128] for i in range(0, file_length, 128)]
 
             # Apply the padding to the last block if last block length < 128 bits
+            file_padding = 0
             for i in range(len(blocks)):
                 if len(blocks[i]) < 128:
-                    blocks[i].extend([0] * (128 - len(blocks[i])))
+                    file_padding = 128 - len(blocks[i])
+                    blocks[i].extend([0] * file_padding)
+
 
             for i in range(len(blocks)) :
                 blocks[i] = blocks[i].to01()
-            blocks.append(bin(file_length)[2:].zfill(128))
+            blocks.append(bin(file_padding)[2:].zfill(128))
             return blocks  #Return list of blocks
 
     except FileNotFoundError:
@@ -402,7 +408,6 @@ def encryption(data,master_key) :
             buffer = Last_Iteration(sbox[31],buffer, round_keys)
             buffer = permutation_finale(buffer)
             cipher.append(buffer)
-        print("Cipher : ", cipher)
     else :
         print("Plaintext format is not valid")
     return cipher
@@ -424,12 +429,11 @@ def decryption(cipher,master_key) :
             buffer = permutation_finale(buffer)
             plaintext.append(buffer)
 
-        padding = int(plaintext[-1],2)%128
+        padding = (-1) * int(plaintext[-1],2)
 
         plaintext.pop(-1)
         PT = ''.join(plaintext)
-        PT = PT[:-padding]
-        print("Plaintext_bits : ", PT)
+        PT = PT[:padding]
         return PT
     else:
         print("Plaintext format is not valid")
