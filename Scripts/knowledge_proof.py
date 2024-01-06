@@ -1,55 +1,82 @@
 from keygen import getElementsFromKey
 from utils import *
-import random
+import random,math
 from user import *
 
 import random
 
-def guillouQuisquaterEngagement(v, n, S_A):
+def guillouQuisquaterEngagement(e, n):
     """
     Étape d'engagement par Alice.
-    v: exposant de vérification
+    e: exposant 
     n: module RSA
-    S_A: signature d'Alice (représentant la clé privée)
     """
-    r = random.randint(1, n - 1)
-    x = pow(r, v, n)
-    return r, x
+    while True:
+        y = random.randint(2, n - 1)
+        if y % n != 0:
+            Y = pow(y, e, n)
+            if math.gcd(y,n)>1:
+                continue
+            else:
+                return y,Y
 
-def guillouQuisquaterDefi(v):
+def guillouQuisquaterDefi(e):
     """
     Étape de défi par Bob.
-    v: exposant de vérification
+    e: exposant de clé publique
     """
-    e = random.randint(1, v - 1)
-    return e
+    c = random.randint(1, e - 1)
+    return c
 
-def guillouQuisquaterReponse(r, S_A, e, n):
+def guillouQuisquaterReponse(y, d, c, n):
     """
     Étape de réponse par Alice.
-    r: nombre aléatoire choisi par Alice
-    S_A: signature d'Alice (représentant la clé privée)
-    e: défi choisi par Bob
+    y: nombre aléatoire choisi par Alice
+    d: signature d'Alice (représentant la clé privée)
+    c: défi choisi par Bob
     n: module RSA
     """
-    y = (r * pow(S_A, e)) % n
-    return y
+    Z = (y * pow(d, c)) % n
+    return Z
 
-def guillouQuisquaterVerification(x, J_A, e, y, v, n):
+def guillouQuisquaterVerification(y, d, c, Z, e, n):
     """
     Étape de vérification par Bob.
-    x: engagement envoyé par Alice
-    J_A: clé publique d'Alice
-    e: défi choisi par Bob
-    y: réponse d'Alice
-    v: exposant de vérification
+    y: Premier nombre aleatoire
+    d: Secret
+    c: défi choisi par Bob
+    Z: réponse d'Alice
+    e: exposant de vérification
     n: module RSA
     """
-    check_value = (pow(J_A, e, n) * pow(y, v, n)) % n
-    print("check: "+str(check_value))
-    return check_value == x and check_value != 0
+    #PREMIERE VALEUR
+    val1 = pow(Z,e,n)
+    print("val1:",val1)
+    #PUBLIC X
+    Y = pow(y,e,n)
+    #PRIVATE Y
+    D = pow(d,e,n)
+    val2 = (Y*pow(D,c))%n
+    print("val2:",val2)
+    if val1 == val2:
+        print("ok")
 
 if __name__ == '__main__':
+    ca = autoriteCert("GS15_CA")
+    e,n = getElementsFromKey(ca.getPublicKey()) 
+    d,n = getElementsFromKey(ca.getPrivateKey())
+    #e=3
+    #n=101
+    #-y: secret x: premier nombre aléatoire
+    y,Y = guillouQuisquaterEngagement(e,n)
+    print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
+    c=guillouQuisquaterDefi(e)
+    print("+Deuxieme etape \nc:",c)
+    Z=guillouQuisquaterReponse(y,d,c,n)
+    print("+Troisieme etape\nZ:",Z)
+    guillouQuisquaterVerification(y,d,c,Z,e,n)
+
+    """
     print("+ Bienvenue dans l'API: GS15_api")
     choice = input("+ Desirez-vous creer un compte (1) ou vous authentifier (2): ")
 
@@ -92,21 +119,21 @@ if __name__ == '__main__':
     ca = autoriteCert("CA")  # Création d'une instance de l'autorité de certification
 
     # On récupere les valeurs de l'autorite de certification
-    v,n = getElementsFromKey(ca.getPublicKey())  # Exemple d'exposant public
+    e,n = getElementsFromKey(ca.getPublicKey())  # Exemple d'exposant public
     d,n = getElementsFromKey(ca.getPrivateKey())# Exemple de module RSA
 
     # Exemple de valeurs
     #n = # Le module RSA
     #v = # Exposant de vérification (doit être convenu ou choisi)
     S_A = d# Signature d'Alice (représentant la clé privée)
-    J_A = v# Clé publique d'Alice (correspondant à la signature)
+    J_A = e# Clé publique d'Alice (correspondant à la signature)
 
     # Étape d'engagement
-    r, x = guillouQuisquaterEngagement(v, n, S_A)
+    r, x = guillouQuisquaterEngagement(e, n, S_A)
     print("Engagement: ", x)
 
     # Étape de défi
-    e = guillouQuisquaterDefi(v)
+    e = guillouQuisquaterDefi(e)
     print("Défi: ", e)
 
     # Étape de réponse
@@ -118,3 +145,4 @@ if __name__ == '__main__':
         print("Vérification réussie.")
     else:
         print("Échec de la vérification.")
+    """
