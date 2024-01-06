@@ -1,7 +1,7 @@
 from Scripts.keygen import *
 import csv
 from Scripts.Symmetric import encryption,decryption,output_to_file,input_console_message,read_file_convert
-from certificate_sign import sha256
+from Scripts.certificate_sign import sha256
 import os
 import bitarray
 import random
@@ -229,24 +229,3 @@ def read_message(users):
     save_users(users)
     return None
 
-
-
-if __name__ == '__main__':
-    while True:
-        users = load_user()
-        choice = input("[1] - Create a user\n[2] - Send a message\n[3] - Read a message\n[4] - Exit\n")
-        match choice:
-            case "1":
-                name,name2 = create_user(users)
-                users = first_message(name,name2,users)
-            case "2" :
-                name = input("[+] LOGIN : ")
-                name2 = input("Send a message to : ")
-                users = message_user(users,name,name2)
-            case "3":
-                read_message(users)
-            case "q" | "exit" | "quit" | '4':
-                print("[*] Exiting...............")
-                break
-            case other :
-                print("Please choose a valid option")

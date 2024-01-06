@@ -1,6 +1,6 @@
 #CE SCRIPT comptient :  La génération des demandes de certificats (CSR) -- La génération des certificats -- La signature des certificats
 #---Hash Input message
-from keygen import getElementsFromKey,parseRSA,generateRSA,stringToBase64,base64ToString
+from Scripts.keygen import getElementsFromKey,parseRSA,generateRSA,stringToBase64,base64ToString
 import os,datetime
 
 #---------------------------------------------------------HASH

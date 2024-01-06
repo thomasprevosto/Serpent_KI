@@ -1,4 +1,5 @@
 from Scripts import Symmetric as symm
+from Scripts import async_enc as signal
 import sys
 import os
 
@@ -44,7 +45,24 @@ def check_choice(choice):
         case '4' :
             print('To do')
         case '5':
-            print('To do')
+            while True:
+                users = signal.load_user()
+                choice5 = input("[1] - Create a user\n[2] - Send a message\n[3] - Read a message\n[4] - Exit\n")
+                match choice5:
+                    case "1":
+                        name, name2 = signal.create_user(users)
+                        users = signal.first_message(name, name2, users)
+                    case "2":
+                        name = input("[+] LOGIN : ")
+                        name2 = input("Send a message to : ")
+                        users = signal.message_user(users, name, name2)
+                    case "3":
+                        signal.read_message(users)
+                    case "q" | "exit" | "quit" | '4':
+                        print("[*] Exiting...............")
+                        break
+                    case other:
+                        print("Please choose a valid option")
 
         case '6':
             print('To do')
