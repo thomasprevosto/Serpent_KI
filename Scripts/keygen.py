@@ -1,5 +1,5 @@
-import numpy, bitarray, os
-import base64, random
+import random
+from utils import *
 #''' v1 du Script
 #''' Fonctionnel
 #''' Améliorations potentielles :  Intégrer ASN.1 dans le format des clés pour plus de propreté.
@@ -58,31 +58,6 @@ def inverseModulaire(aModulo, bNombre):
         
     return x % modulo if aModulo == 1 else 0
 
-#--- ENCODE BASE 64
-#--- Take a 10-base number and return a 64-base number
-def numToBase64(num):
-    num_bytes = num.to_bytes((num.bit_length() + 7) // 8, byteorder='big')
-    return base64.b64encode(num_bytes)
-def base64ToNum(num64):
-    decoded_bytes = base64.b64decode(num64.encode('utf-8'))
-    decimal_result = int.from_bytes(decoded_bytes, byteorder='big')
-    return decimal_result
-def stringToBase64(string):
-    encoded_result = base64.b64encode(string.encode('utf-8')).decode('utf-8')
-    return encoded_result
-def base64ToString(string64):
-    decoded_result = base64.b64decode(string64.encode('utf-8')).decode('utf-8')
-    return decoded_result
-def stringToInt(string):
-    string_bytes = string.encode('UTF-8')
-    string_int = int.from_bytes(string_bytes, byteorder='big')
-    return string_int
-def intToString(txt_int):
-    byte_size = (txt_int.bit_length() + 7) // 8
-    byte_representation = txt_int.to_bytes(byte_size, byteorder='big')
-    decoded_text = byte_representation.decode('utf-8')
-    return decoded_text
-
 def writePubKey(f):
     f.write("-----BEGIN PUBLIC KEY-----\n")
     f.write
@@ -138,46 +113,6 @@ def generateRSA():
     fPriKey.write(str(strpriKey_64))
     fPriKey.write("\n-----END PRIVATE KEY-----")
     return nameKey
-
-def parseRSA(cle):
-    # Supprimer les lignes "-----BEGIN" et "-----END"
-    cle_sans_en_tetes = '\n'.join(ligne for ligne in cle.split('\n') if not ligne.startswith('-----BEGIN') and not ligne.startswith('-----END'))
-    return cle_sans_en_tetes
-
-#'''Fonction qui retourne:
-#'''Cle publique: e et n
-#'''Cle privee: d et n
-def getElementsFromKey(path):
-    with open(path, "r") as key_file:
-        key_data_64 = parseRSA(key_file.read())
-    #--- Base64 --> String
-    key_data = base64ToString(key_data_64)
-    #--- If : cle publique ou non
-    if "e=" in key_data:
-        start_index_n = key_data.find("n=") + 2
-        end_index_n = key_data.find("e=")
-        start_index_e = key_data.find("e=") + 2
-        # Extraire les parties "e" et "n" de la clé
-        n_part = key_data[start_index_n:end_index_n].strip()
-        e_part = key_data[start_index_e:].strip()
-        # Convertir les parties en entiers
-        e = int(e_part)
-        n = int(n_part)
-        return e, n
-    elif "d=" in key_data:
-        start_index_n = key_data.find("n=") + 2
-        end_index_n = key_data.find("d=")
-        start_index_d = key_data.find("d=") + 2
-        # Extraire les parties "e" et "n" de la clé
-        n_part = key_data[start_index_n:end_index_n].strip()
-        d_part = key_data[start_index_d:].strip()
-        # Convertir les parties en entiers
-        d = int(d_part)
-        n = int(n_part)
-        return d, n
-    else:
-        print("+ ERREUR: Mauvais format ou chemin de la clé")
-        return 1
 
 #Fonction de chiffrement asymétrique à l'aide de clés RSA
 def cipherRSA():
