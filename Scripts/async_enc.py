@@ -1,7 +1,7 @@
 from Scripts.keygen import *
 import csv
 from Scripts.Symmetric import encryption,decryption,output_to_file,input_console_message,read_file_convert
-from Scripts.certificate_sign import sha256
+from Scripts.utils import sha256
 import os
 import bitarray
 import random

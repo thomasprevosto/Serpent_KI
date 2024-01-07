@@ -1,5 +1,5 @@
-from certificate_sign import *
-from user import *
+from Scripts.certificate_sign import *
+from Scripts.user import *
 
 #--- Script permettant de vérifier l'authenticite et la validite des certificats.
 #- Verification de l'autorite de certification et de la date du certificat.

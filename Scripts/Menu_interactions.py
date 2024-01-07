@@ -1,5 +1,7 @@
 from Scripts import Symmetric as symm
 from Scripts import async_enc as signal
+from Scripts import keygen as keygen
+from Scripts import user
 import sys
 import os
 
@@ -39,7 +41,30 @@ def check_choice(choice):
                     case other :
                         print('[*]  Choose a valid option')
         case '2' :
-            print('To do')
+            os.system('cls')
+            user.authenticate()
+            option2 = {
+                1 : 'Generate a pair of RSA',
+                2 : 'Encrypt a message',
+                3 : 'Decrypt a message',
+                4 : 'Quit'
+            }
+            while True:
+                os.system('cls')
+                choice2 = print_menu(option2)
+                match choice1 :
+                    case '1':
+                        os.system('cls')
+                        user.changeKey()
+                    case '2':
+                        keygen.cipherRSA()
+                    case '3':
+                        keygen.decipherRSA()
+                    case '4' | 'q' | 'quit' | 'exit':
+                        print("[*] Exiting...............")
+                        break
+                    case other :
+                        print('Please choose a valid option')
         case '3' :
             print('To do')
         case '4' :
