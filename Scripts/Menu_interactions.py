@@ -16,7 +16,6 @@ def print_menu(options) :
 
 def check_choice(choice):
     match choice :
-
         case '1' :      #Import Symmetric.py
             os.system('cls')
             option1 = {
