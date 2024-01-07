@@ -74,7 +74,9 @@ def input_console_message():
         blocks.append(bin(message_padding)[2:].zfill(128))
         return blocks
     elif message_length == 128:
-        return message_bits.to01()
+        blocks = [message_bits.to01()]
+        blocks.append(bin(int(0))[2:].zfill(128))
+        return blocks
     else:
         #Slice the message in 128 bits blocks
         blocks = [message_bits[i:i + 128] for i in range(0, message_length, 128)]
@@ -109,9 +111,11 @@ def read_file_convert(file_path):
             blocks = [file_bits.to01()]
 
             blocks.append(bin(file_padding)[2:].zfill(128))
-            return file_bits.to01()  # Return the bit string
+            return blocks.to01()  # Return the bit string
         elif file_length == 128:
-            return file_bits.to01()
+            blocks = [file_bits.to01()]
+            blocks.append(bin(file_padding)[2:].zfill(128))
+            return blocks.to01()
         else:
             # Cut the file content in blocks of 128 bits
             blocks = [file_bits[i:i + 128] for i in range(0, file_length, 128)]
