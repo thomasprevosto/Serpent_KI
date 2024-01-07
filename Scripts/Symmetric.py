@@ -162,7 +162,7 @@ def output_to_file(text):
         return False
 
 def masterkey_generation():
-    master_key = hex(random.getrandbits(256))
+    master_key = hex(random.getrandbits(256))[2:].zfill(64)
     key_path = input("Path to key : ")
     try:
         with open(key_path, 'w') as file:
@@ -235,11 +235,10 @@ def front_decryption() :
     file_path = input("File path : ")
     message = read_file_convert(file_path)
     key_path = input("Path to key : ")
-    master_key_bits = bitarray.bitarray()
+    master_key = ''
     try:
-        with open(key_path, 'rb') as file:
-            master_key_bits.fromfile(file)
-        master_key = master_key_bits.to01()
+        with open(key_path, 'r') as file:
+            master_key = file.read()
         print(f"Key [{master_key}] read at {key_path}")
     except FileNotFoundError:
         print(f"File not found : {key_path}")
