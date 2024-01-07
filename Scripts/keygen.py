@@ -1,10 +1,11 @@
-import random
+import random,time
 from Scripts.utils import *
 
 #''' v2 du Script
 #''' Fonctionnel
 #--- TEST of "petit théorème de Fermat" if number is primary
 PATH_KEY = "Serpent_KI/Resources/key/"
+PATH_CIPHER = "Serpent_KI/Resources/RSA_encryption/"
 def isProbablyPrimary(N):
     """
     Function isProbablyPrimary
@@ -50,26 +51,21 @@ def invertMod(aModulo, bNombre):
         bModulo: Nombre dont on cherche à obtenir l'inverse 
     """
     modulo = aModulo
-    
     x = 0
     y = 1
     u = 1
     v = 0
-    
     while bNombre != 0:
         q = aModulo // bNombre
         r = aModulo % bNombre
-        
         m = x - u * q
         n = y - v * q
-        
         aModulo = bNombre
         bNombre = r
         x = u
         y = v
         u = m
-        v = n
-        
+        v = n    
     return x % modulo if aModulo == 1 else 0
 
 def writePubKey(f):
@@ -137,22 +133,25 @@ def generateRSA():
     return nameKey
 
 # Asymmetric encryption function using RSA keys
-def cipherRSA():
+def cipherRSA(user):
     print("+ Starting asymmetric encryption using RSA keys")
-    path = input("+ Please enter the path of your public key: ")
-    e, n = getElementsFromKey(path)
+    #path = input("+ Please enter the path of your public key: ")
+    e, n = getElementsFromKey(user.getPublicPathKey())
     txt = input("+ Enter your message: ")
     txt_number = stringToInt(txt)
     cipher_txt = pow(txt_number, e, n)
-    print(str(cipher_txt))
+    print("+ Cipher Text: \n"+str(cipher_txt))
+    cipherPath=input("+ Enter name of cipher message: ")
+    with open(PATH_CIPHER+cipherPath,"w") as fCIPHER:
+        fCIPHER.write(str(cipher_txt))
 
-def decipherRSA():
+def decipherRSA(user):
     print("+ Starting asymmetric decryption using RSA keys")
-    path = input("+ Please enter the path of your private key: ")
-    d, n = getElementsFromKey(path)
+    d, n = getElementsFromKey(user.getPrivatePathKey())
     cipher_txt = int(input("+ Enter the encrypted message: "))
     txt = pow(cipher_txt, d, n)
-    print(intToString(txt))
+    print("+ Clear Message: \n"+intToString(txt))
+    time.sleep(3)
 
 
 if __name__ == '__main__':

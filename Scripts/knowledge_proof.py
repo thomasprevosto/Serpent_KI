@@ -2,8 +2,7 @@ from Scripts.keygen import getElementsFromKey
 from Scripts.utils import *
 from Scripts.user import *
 
-import random,math
-import random
+import random,math,time
 
 def guillouQuisquaterEngagement(e, n):
     """
@@ -61,12 +60,14 @@ def guillouQuisquaterVerification(y, d, c, Z, e, n):
     val2 = (Y*pow(D,c))%n
     print("val2:",val2)
     if val1 == val2:
-        print("ok")
+        print("+ Test of Guillou Quisquater is valid")
+        time.sleep(10)
 
-def testGuillouQuisquater(prouveur,verifieur):
-    ca = autoriteCert("GS15_CA")
-    e,n = getElementsFromKey(ca.getPublicKey()) 
-    d,n = getElementsFromKey(ca.getPrivateKey())
+def testGuillouQuisquater(prouveur):
+    #ICI CA est le prouveur
+    #ca = autoriteCert("GS15_CA")
+    e,n = getElementsFromKey(prouveur.getPublicPathKey()) 
+    d,n = getElementsFromKey(prouveur.getPrivatePathKey())
 
     y,Y = guillouQuisquaterEngagement(e,n)
     print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
@@ -76,7 +77,27 @@ def testGuillouQuisquater(prouveur,verifieur):
     print("+Troisieme etape\nZ:",Z)
     guillouQuisquaterVerification(y,d,c,Z,e,n)
 
-#MAIN temp
+def zeroKnowledgeProof(user,autorite):
+    print("+ Hello "+user.nom+" welcome to the ZKP area.")
+    print("+ List of people you can try with:")
+    print("\t- "+autorite.getName())
+    try:
+        utilisateurs = utilisateur.charger_donnees(database)
+    except:
+        utilisateurs = []
+    for u in utilisateurs:
+        if not user.nom == u.nom:
+            print("\t""- "+u.nom)
+    name = input("+ Who do you want to try with the Zero-Knowledge-Proof of Guillou-Quisquater: ")
+    if name == "GS15_CA":
+        prouveur = autorite
+    else:
+        for u in utilisateurs:
+            if u.nom == name:
+                prouveur = u
+    print(prouveur.getName())
+    testGuillouQuisquater(prouveur)
+
 if __name__ == '__main__':
     ca = autoriteCert("GS15_CA")
     e,n = getElementsFromKey(ca.getPublicKey()) 

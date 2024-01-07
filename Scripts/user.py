@@ -1,6 +1,6 @@
 from Scripts.keygen import generateRSA
 from Scripts.utils import *
-import json,os
+import json,os,shutil
 from datetime import datetime,timedelta
 
 #Chemin de la database json des utilisateurs
@@ -35,6 +35,10 @@ class utilisateur:
         }
     def getName(self):
         return self.nom
+    def getPublicPathKey(self):
+        return self.pubKey
+    def getPrivatePathKey(self):
+        return self.priKey
     def getPublicKey(self):
         with open(self.pubKey,"r") as f:
             return (f.read())
@@ -48,14 +52,15 @@ class utilisateur:
         return signRSA
     def changeKey(self):
         self.nameKey=generateRSA()
-        self.pubKey = PATH_KEY+self.namekey+"_public.key"
-        self.priKey = PATH_KEY+self.namekey+"_private.key"
-    def sauvegarder_donnees(self, utilisateurs, fichier):
+        self.pubKey = PATH_KEY+self.nameKey+"_public.key"
+        self.priKey = PATH_KEY+self.nameKey+"_private.key"
+        print("+ Pair of key changed, new keys: "+self.nameKey+"_public.key and "+self.nameKey+"_private.key")
+    def sauvegarder_donnees(self, utilisateurs):
         donnees = {"utilisateurs": []}
         for utilisateur in utilisateurs:
             donnees["utilisateurs"].append(utilisateur.getPersonalInformation())
 
-        with open(fichier, "w") as f:
+        with open(database, "w") as f:
             f.write(json.dumps(donnees))
             f.write('\n')
 
@@ -91,6 +96,10 @@ class autoriteCert:
         self.nom = nom
     def getName(self):
         return self.nom
+    def getPublicPathKey(self):
+        return self.pathPublicRSA
+    def getPrivatePathKey(self):
+        return self.pathPrivateRSA
     def getPublicKey(self):
         return self.pathPublicRSA
     def getPrivateKey(self):
@@ -123,26 +132,32 @@ class autoriteSequ:
         return self.nom
     #--- Affiche les certificats signes qui sont contenus dans le depot
     def afficherCSR(self):
-        print("+ ",self.nom," : 'Contenu du dépot de CSR (REQUEST)'\n")
+        print("+ ",self.nom," : 'Content of the depository of CSR (REQUEST)'\n")
         fichiers = []
-        # Parcourir les entrées dans le répertoire
-        for entree in os.listdir(self.PATH_DEPOT_CSR):
-            chemin_complet = os.path.join(self.PATH_DEPOT_CSR, entree)
-            # Vérifier si l'entrée est un fichier et non un dossier
-            if os.path.isfile(chemin_complet):
-                fichiers.append(chemin_complet)
-        for f in fichiers:
-            #TEST si c'est un certificat -> Si oui on l'affiche
-            if ".csr" in f:
-                print("_________________________________________________________")
-                print(f)
-                print("_________________________________________________________")
-                with open(f,"r") as cert:
-                    print(base64ToString(parseCSR(cert.read())))
-                print("_________________________________________________________")
+        if not os.listdir(self.PATH_DEPOT_CSR):
+            print("empty...\n+ WARNING: You must create a CSR (REQUEST) first")
+            return False
+        else:
+            # Parcourir les entrées dans le répertoire
+            for entree in os.listdir(self.PATH_DEPOT_CSR):
+                chemin_complet = os.path.join(self.PATH_DEPOT_CSR, entree)
+                # Vérifier si l'entrée est un fichier et non un dossier
+                if os.path.isfile(chemin_complet):
+                    fichiers.append(chemin_complet)
+            for f in fichiers:
+                #TEST si c'est un certificat -> Si oui on l'affiche
+                if ".csr" in f:
+                    print("-",f)
+                    #with open(f,"r") as cert:
+                    #    print(base64ToString(parseCSR(cert.read())))
+                    #print("_________________________________________________________")
+            return True
     def afficherCertificat(self):
-        print("+ ",self.nom," : 'Contenu du dépot'\n")
+        print("+ ",self.nom," : 'Content of the depository'\n")
         fichiers = []
+        if not os.listdir(self.PATH_DEPOT_CSR):
+            print("empty...")
+            return False
         # Parcourir les entrées dans le répertoire
         for entree in os.listdir(self.PATH_DEPOT):
             chemin_complet = os.path.join(self.PATH_DEPOT, entree)
@@ -152,12 +167,13 @@ class autoriteSequ:
         for f in fichiers:
             #TEST si c'est un certificat -> Si oui on l'affiche
             if ".csr" in f:
-                print("_________________________________________________________")
-                print(f)
-                print("_________________________________________________________")
-                with open(f,"r") as cert:
-                    print(base64ToString(parseCSR(cert.read())))
-                print("_________________________________________________________")
+                #print("_________________________________________________________")
+                print("-",f)
+                #print("_________________________________________________________")
+                #with open(f,"r") as cert:
+                #    print(base64ToString(parseCSR(cert.read())))
+                #print("_________________________________________________________")
+        return True
     #--- On ajoute le certificat au depot lorsque l'on signe le certificat
     def ajouterAuDepot(self,cert):
         print("+ ",self.nom," : 'Ajout au depot du certificat'\n",cert)
@@ -187,8 +203,10 @@ class autoriteSequ:
             return False
     def revoquerCert(self,pathCert):
         print("+ ",self.nom," : 'Revocation du certificat'\n")
-        os.remove(pathCert)
-
+        try:
+            shutil.move(self.PATH_DEPOT+pathCert, self.PATH_DEPOT_REVOK+pathCert)
+        except IOError as e:
+            print(f"Erreur lors du déplacement du fichier: {e}")
 
 def authenticate():
     """
@@ -209,18 +227,14 @@ def authenticate():
     if choice == "1":
         user = utilisateur()
         utilisateurs.append(user)
-        user.sauvegarder_donnees(utilisateurs,database)
+        user.sauvegarder_donnees(utilisateurs)
         print("+ Notez les informations pour vous authentifier:\n\tUsername: "+user.getName()+"\n\tPrivate Key: \n"+user.getPrivateKey()+"\n\Public Key: \n"+user.getPublicKey())
     elif choice == "2":
-        utilisateurs = utilisateur.charger_donnees(database)
-        #print(utilisateurs)
         test = True
         while test:
             name = input("+ Saisir votre nom d'utilisateur: ")
             pKey = input("+ Saisir votre clé privée: ")
             for u in utilisateurs:
-                #print(u.nom)
-                #print(parseRSA(u.getPrivateKey()))
                 if u.getName() == name and parseRSA(u.getPrivateKey()) == (pKey):
                     test = False
                     user = u

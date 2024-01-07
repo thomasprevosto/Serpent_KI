@@ -5,7 +5,7 @@ from Scripts.keygen import getElementsFromKey,parseRSA,generateRSA,stringToBase6
 from Scripts.user import autoriteCert,utilisateur,autoriteSequ,authenticate
 from Scripts.utils import *
 
-import os
+import os,time
 from datetime import date
 
 #-----------------------------------------------------------------------------------------PATHS
@@ -32,12 +32,12 @@ def verifyCSR(pathCSR):
         csrContent = base64ToString(parseCSR(file.read()))
     
     # Afficher le CSR
-    print("Contenu de la demande de certificat:")
-    print(csrContent)
+    #print("Contenu de la demande de certificat:")
+    #print(csrContent)
 
     # Extraire la signature du CSR
     csrSignature = extraire_signature_valeur(csrContent)
-    print(csrSignature)
+    #print(csrSignature)
 
     utilisateurs = utilisateur.charger_donnees(database)
     
@@ -47,10 +47,10 @@ def verifyCSR(pathCSR):
         expectedSignature = user.signature()        
         #print(expectedSignature)
         if csrSignature == expectedSignature:
-            print(f"Le certificat est valide. Correspond à l'utilisateur: {user.getName()}")
+            print(f"+ Certificate is valid. Match to user: {user.getName()}")
             return True
 
-    print("Le certificat est invalide ou ne correspond à aucun utilisateur.")
+    print("+ Certificate is not valid.")
     return False
 #-----------------------------------------------------------------------------------------CERTIFICATS
 #--- Fonction qui permet de demander les informations générales à l'utilisateur
@@ -131,8 +131,11 @@ def generateCertificate(user):
     os.remove(PATH_CSR_DEPOT+nameCSR+".txt")
 
 #--- Fonction qui permet de signer un certificat
-def signCSR(autorite):
-    pathCSR = input("+ Saisir le chemin (relatif) de la demande de signature que vous souhaitez signer: ")
+def signCSR(autorite,autorite_sequ):
+    if not autorite_sequ.afficherCSR():
+        time.sleep(3)
+        return
+    pathCSR = input("\n+ Saisir le chemin (relatif) de la demande de signature que vous souhaitez signer: ")
     print("_________________________________________________________")
     with open(PATH_CSR_DEPOT+pathCSR, "r") as fCSR:
         txtCSR = parseCSR(fCSR.read())
