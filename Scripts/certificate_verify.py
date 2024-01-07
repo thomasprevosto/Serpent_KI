@@ -3,8 +3,7 @@ from Scripts.user import *
 
 #--- Script permettant de vérifier l'authenticite et la validite des certificats.
 #- Verification de l'autorite de certification et de la date du certificat.
-fichier = "database.json"
-PATH_DEPOT = 'Serpent_KI/Resources/depot/'
+PATH_DEPOT = './Resources/depot/'
 #--- Fonction qui permet d'afficher un certificat
 def printCert(autorite_sequ):
     ok = True

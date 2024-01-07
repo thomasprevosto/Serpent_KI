@@ -4,8 +4,8 @@ import json,os,shutil
 from datetime import datetime,timedelta
 
 #Chemin de la database json des utilisateurs
-database = "Serpent_KI/Resources/database.json"
-PATH_KEY="Serpent_KI/Resources/key/"
+database = "./Resources/database.json"
+PATH_KEY="./Resources/key/"
 
 #--- Class des utilisateurs qui utilisent le systeme de l'API.
 class utilisateur:
@@ -123,9 +123,9 @@ class autoriteSequ:
     """
     #initName of sequAut
     #depot --> Acceder aux certificats dans le dépot
-    PATH_DEPOT = 'Serpent_KI/Resources/depot/'
-    PATH_DEPOT_REVOK = 'Serpent_KI/Resources/depot_revok/'
-    PATH_DEPOT_CSR = 'Serpent_KI/Resources/depot_csr/'
+    PATH_DEPOT = './Resources/depot/'
+    PATH_DEPOT_REVOK = './Resources/depot_revok/'
+    PATH_DEPOT_CSR = './Resources/depot_csr/'
     def __init__(self,nom):
         self.nom = nom
     def getName(self):

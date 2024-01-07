@@ -9,10 +9,10 @@ import os,time
 from datetime import date
 
 #-----------------------------------------------------------------------------------------PATHS
-database='Serpent_KI\Resources\database.json'
-PATH_DEPOT='Serpent_KI\Resources\depot/'
-PATH_CSR_DEPOT='Serpent_KI\Resources\depot_csr/'
-PATH_KEY="Serpent_KI/Resources/key/"
+database='./Resources\database.json'
+PATH_DEPOT='./Resources\depot/'
+PATH_CSR_DEPOT='./Resources\depot_csr/'
+PATH_KEY="./Resources/key/"
 
 #-----------------------------------------------------------------------------------------CSR FUNCTIONS
 def changeField(champ_a_modifier,valeur_du_champ,text_cert):

@@ -8,7 +8,6 @@ def print_menu(options) :
     for key in options.keys() :
         print('[',key,']    ',options[key])
     return input("Enter your choice :   ")
-
 if __name__ == '__main__':
     options = {
         1: 'Encrypt/Decrypt a message',

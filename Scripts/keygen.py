@@ -4,8 +4,8 @@ from Scripts.utils import *
 #''' v2 du Script
 #''' Fonctionnel
 #--- TEST of "petit théorème de Fermat" if number is primary
-PATH_KEY = "Serpent_KI/Resources/key/"
-PATH_CIPHER = "Serpent_KI/Resources/RSA_encryption/"
+PATH_KEY = "./Resources/key/"
+PATH_CIPHER = "./Resources/RSA_encryption/"
 def isProbablyPrimary(N):
     """
     Function isProbablyPrimary
