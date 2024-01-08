@@ -114,7 +114,7 @@ def read_file_convert(file_path):
             return blocks.to01()  # Return the bit string
         elif file_length == 128:
             blocks = [file_bits.to01()]
-            blocks.append(bin(file_padding)[2:].zfill(128))
+            blocks.append(bin(int(0))[2:].zfill(128))
             return blocks.to01()
         else:
             # Cut the file content in blocks of 128 bits
@@ -235,7 +235,7 @@ def front_encryption() :
 def front_decryption() :
     file_path = input("File path : ")
     message = read_file_convert(file_path)
-    master_key = master_key_file_read()
+    master_key = masterkey_file_read()
     PT = decryption(message, master_key)
     output_to_file(PT)
 """-----------------------Front-end Menus--------------------------------"""
@@ -421,9 +421,10 @@ def decryption(cipher,master_key) :
             plaintext.append(buffer)
 
         padding = (-1) * int(plaintext[-1],2)
-
         plaintext.pop(-1)
         PT = ''.join(plaintext)
+        if padding == 0:
+            return PT
         PT = PT[:padding]
         return PT
     else:
