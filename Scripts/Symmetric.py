@@ -235,7 +235,7 @@ def front_encryption() :
 def front_decryption() :
     file_path = input("File path : ")
     message = read_file_convert(file_path)
-    master_key = master_key_file_read()
+    master_key = masterkey_file_read()
     PT = decryption(message, master_key)
     output_to_file(PT)
 """-----------------------Front-end Menus--------------------------------"""
