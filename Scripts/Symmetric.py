@@ -183,19 +183,16 @@ def masterkey_generation():
 
 def masterkey_file_read() :
     key_path = input("Path to key : ")
-    master_key_bits = bitarray.bitarray()
+    master_key = ''
     try:
-        with open(key_path, 'rb') as file:
-            master_key_bits.fromfile(file)
-        master_key = master_key_bits.to01()
+        with open(key_path, 'r') as file:
+            master_key = file.read()
         print(f"Key [{master_key}] read at {key_path}")
         return master_key
     except FileNotFoundError:
         print(f"File not found : {key_path}")
-        return None
     except Exception as e:
         print(f"Error : {e}")
-        return None
 """------------------INPUT/OUTPUT FUNCTIONS---------------------------"""
 
 """------------------Front-end Menus----------------------------------"""
@@ -238,16 +235,7 @@ def front_encryption() :
 def front_decryption() :
     file_path = input("File path : ")
     message = read_file_convert(file_path)
-    key_path = input("Path to key : ")
-    master_key = ''
-    try:
-        with open(key_path, 'r') as file:
-            master_key = file.read()
-        print(f"Key [{master_key}] read at {key_path}")
-    except FileNotFoundError:
-        print(f"File not found : {key_path}")
-    except Exception as e:
-        print(f"Error : {e}")
+    master_key = master_key_file_read()
     PT = decryption(message, master_key)
     output_to_file(PT)
 """-----------------------Front-end Menus--------------------------------"""
