@@ -6,7 +6,6 @@ from Scripts import certificate_verify as verifCert
 from Scripts import knowledge_proof as ZKP
 from Scripts import user
 import sys
-import os
 
 def print_menu(options) :
     for key in options.keys() :
@@ -20,22 +19,18 @@ def print_menu(options) :
 def check_choice(choice):
     match choice :
         case '1' :      #Import Symmetric.py
-            os.system('cls')
             option1 = {
                 1 : 'Encrypt a message',
                 2 : 'Decrypt a message',
                 3 : 'Quit'
             }
             while True :
-                os.system('cls')
                 choice1 = print_menu(option1)
                 match choice1 :
                     case '1' :
-                        os.system('cls')
                         symm.front_encryption()
                         break
                     case '2' :
-                        os.system('cls')
                         symm.front_decryption()
                         break
                     case '3' | 'q' | 'quit' | 'exit':
@@ -43,7 +38,6 @@ def check_choice(choice):
                     case other :
                         print('[*]  Choose a valid option')
         case '2' :
-            os.system('cls')
             uSer = user.authenticate()
             option2 = {
                 1 : 'Generate a pair of RSA',
@@ -52,12 +46,10 @@ def check_choice(choice):
                 4 : 'Quit'
             }
             while True:
-                os.system('cls')
                 print("+ Hello "+uSer.nom+" welcome to the RSA area.")
                 choice2 = print_menu(option2)
                 match choice2:
                     case '1':
-                        os.system('cls')
                         keygen.generateRSA()
                     case '2':
                         keygen.cipherRSA(uSer)
@@ -69,7 +61,6 @@ def check_choice(choice):
                     case other :
                         print('Please choose a valid option')
         case '3' :
-            os.system('cls')
             uSer = user.authenticate()
             option3 = {
                 1 : 'Generate a certificate request (CSR)',
@@ -77,15 +68,12 @@ def check_choice(choice):
                 3 : 'Quit'
             }
             while True:
-                os.system('cls')
                 print("+ Hello "+uSer.nom+" welcome to the certificate area.")
                 choice3=print_menu(option3)
                 match choice3:
                     case '1':
-                        os.system('cls')
                         cert.generateCertificate(uSer)
                     case '2':
-                        os.system('cls')
                         autorite_cert,autorite_sequ=user.initialisation()
                         cert.signCSR(autorite_cert,autorite_sequ)
                     case '3' | 'q' | 'quit' | 'exit':
@@ -95,17 +83,14 @@ def check_choice(choice):
                         print('Please choose a valid option')
 
         case '4' :
-            os.system('cls')
             option4 = {
                 1 : 'Verify a certificate',
                 2 : 'Quit',
             }
             while True:
-                os.system('cls')
                 choice4=print_menu(option4)
                 match choice4:
                     case '1':
-                        os.system('cls')
                         autorite_cert,autorite_sequ=user.initialisation()
                         verifCert.verifyCertificate(autorite_sequ,autorite_cert)
                     case '2' | 'q' | 'quit' | 'exit':
@@ -135,17 +120,14 @@ def check_choice(choice):
                         print("Please choose a valid option")
 
         case '6':
-            os.system('cls')
             option6 = {
                 1 : 'Ask for a zero knowledge proof',
                 2 : 'Quit',
             }
             while True:
-                os.system('cls')
                 choice6=print_menu(option6)
                 match choice6:
                     case '1':
-                        os.system('cls')
                         uSer = user.authenticate()
                         autorite_cert,_=user.initialisation()
                         ZKP.zeroKnowledgeProof(uSer,autorite_cert)
