@@ -29,7 +29,7 @@ def guillouQuisquaterDefi(e):
     c = random.randint(1, e - 1)
     return c
 
-def guillouQuisquaterReponse(y, d, c, n):
+def guillouQuisquaterReponse(y, d, e, c, n):
     """
     Étape de réponse par Alice.
     y: nombre aléatoire choisi par Alice
@@ -38,9 +38,11 @@ def guillouQuisquaterReponse(y, d, c, n):
     n: module RSA
     """
     Z = (y * pow(d, c)) % n
-    return Z
+    D = pow(d,e,n)
 
-def guillouQuisquaterVerification(y, d, c, Z, e, n):
+    return Z,D
+
+def guillouQuisquaterVerification(y, D, c, Z, e, n):
     """
     Étape de vérification par Bob.
     y: Premier nombre aleatoire
@@ -56,12 +58,10 @@ def guillouQuisquaterVerification(y, d, c, Z, e, n):
     #PUBLIC X
     Y = pow(y,e,n)
     #PRIVATE Y
-    D = pow(d,e,n)
     val2 = (Y*pow(D,c))%n
     print("val2:",val2)
     if val1 == val2:
         print("+ Test of Guillou Quisquater is valid")
-        time.sleep(10)
 
 def testGuillouQuisquater(prouveur):
     #ICI CA est le prouveur
@@ -73,9 +73,9 @@ def testGuillouQuisquater(prouveur):
     print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
     c=guillouQuisquaterDefi(e)
     print("+Deuxieme etape \nc:",c)
-    Z=guillouQuisquaterReponse(y,d,c,n)
+    Z,D=guillouQuisquaterReponse(y,d,e,c,n)
     print("+Troisieme etape\nZ:",Z)
-    guillouQuisquaterVerification(y,d,c,Z,e,n)
+    guillouQuisquaterVerification(y,D,c,Z,e,n)
 
 def zeroKnowledgeProof(user,autorite):
     print("+ Hello "+user.nom+" welcome to the ZKP area.")
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
     c=guillouQuisquaterDefi(e)
     print("+Deuxieme etape \nc:",c)
-    Z=guillouQuisquaterReponse(y,d,c,n)
+    Z,D=guillouQuisquaterReponse(y,d,e,c,n)
     print("+Troisieme etape\nZ:",Z)
     guillouQuisquaterVerification(y,d,c,Z,e,n)
 
