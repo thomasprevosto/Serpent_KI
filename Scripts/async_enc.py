@@ -216,7 +216,7 @@ def read_message(users):
         #First message to be read from the other user --> the DH output rootkey needs to be calculated
         rootkey = DH(int(user_line[2]),int(user_line[3]))
         chain_key = message_decryption(name2_f,rootkey,message)
-    elif int(counter_f) < (int(user_line[5])+1):
+    elif int(counter_f) > (int(user_line[5])+1):
         #Prevent user from reading a message out of order (ratchet key will change and former message will be lost)
         inbox = int(counter_f) - int(user_line[5])
         print(f"Message can't be read --- Please read the messages in order\n{inbox} message(s) from {name2_f} in inbox")
