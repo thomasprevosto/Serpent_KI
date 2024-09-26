@@ -1,14 +1,14 @@
-from keygen import getElementsFromKey
-from utils import *
-import random,math
-from user import *
+from Scripts.keygen import getElementsFromKey
+from Scripts.utils import *
+from Scripts.user import *
 
-import random
+import random,math,time
 
 def guillouQuisquaterEngagement(e, n):
     """
-    Étape d'engagement par Alice.
-    e: exposant 
+    function: guillouQuisquater Engagement
+    1ère Étape d'engagement pour le Prouveur.
+    e: exposant de clé publique
     n: module RSA
     """
     while True:
@@ -22,13 +22,14 @@ def guillouQuisquaterEngagement(e, n):
 
 def guillouQuisquaterDefi(e):
     """
-    Étape de défi par Bob.
+    function: guillouQuisquaterDefi
+    2ème Étape de défi pour le vérifieur.
     e: exposant de clé publique
     """
     c = random.randint(1, e - 1)
     return c
 
-def guillouQuisquaterReponse(y, d, c, n):
+def guillouQuisquaterReponse(y, d, e, c, n):
     """
     Étape de réponse par Alice.
     y: nombre aléatoire choisi par Alice
@@ -37,9 +38,11 @@ def guillouQuisquaterReponse(y, d, c, n):
     n: module RSA
     """
     Z = (y * pow(d, c)) % n
-    return Z
+    D = pow(d,e,n)
 
-def guillouQuisquaterVerification(y, d, c, Z, e, n):
+    return Z,D
+
+def guillouQuisquaterVerification(y, D, c, Z, e, n):
     """
     Étape de vérification par Bob.
     y: Premier nombre aleatoire
@@ -55,94 +58,56 @@ def guillouQuisquaterVerification(y, d, c, Z, e, n):
     #PUBLIC X
     Y = pow(y,e,n)
     #PRIVATE Y
-    D = pow(d,e,n)
     val2 = (Y*pow(D,c))%n
     print("val2:",val2)
     if val1 == val2:
-        print("ok")
+        print("+ Test of Guillou Quisquater is valid")
+
+def testGuillouQuisquater(prouveur):
+    #ICI CA est le prouveur
+    #ca = autoriteCert("GS15_CA")
+    e,n = getElementsFromKey(prouveur.getPublicPathKey()) 
+    d,n = getElementsFromKey(prouveur.getPrivatePathKey())
+
+    y,Y = guillouQuisquaterEngagement(e,n)
+    print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
+    c=guillouQuisquaterDefi(e)
+    print("+Deuxieme etape \nc:",c)
+    Z,D=guillouQuisquaterReponse(y,d,e,c,n)
+    print("+Troisieme etape\nZ:",Z)
+    guillouQuisquaterVerification(y,D,c,Z,e,n)
+
+def zeroKnowledgeProof(user,autorite):
+    print("+ Hello "+user.nom+" welcome to the ZKP area.")
+    print("+ List of people you can try with:")
+    print("\t- "+autorite.getName())
+    try:
+        utilisateurs = utilisateur.charger_donnees(database)
+    except:
+        utilisateurs = []
+    for u in utilisateurs:
+        if not user.nom == u.nom:
+            print("\t""- "+u.nom)
+    name = input("+ Who do you want to try with the Zero-Knowledge-Proof of Guillou-Quisquater: ")
+    if name == "GS15_CA":
+        prouveur = autorite
+    else:
+        for u in utilisateurs:
+            if u.nom == name:
+                prouveur = u
+    print(prouveur.getName())
+    testGuillouQuisquater(prouveur)
 
 if __name__ == '__main__':
     ca = autoriteCert("GS15_CA")
     e,n = getElementsFromKey(ca.getPublicKey()) 
     d,n = getElementsFromKey(ca.getPrivateKey())
-    #e=3
-    #n=101
-    #-y: secret x: premier nombre aléatoire
+    
     y,Y = guillouQuisquaterEngagement(e,n)
     print("+ Premiere étape \ny(random):",y,"\nY: ",Y)
     c=guillouQuisquaterDefi(e)
     print("+Deuxieme etape \nc:",c)
-    Z=guillouQuisquaterReponse(y,d,c,n)
+    Z,D=guillouQuisquaterReponse(y,d,e,c,n)
     print("+Troisieme etape\nZ:",Z)
     guillouQuisquaterVerification(y,d,c,Z,e,n)
 
-    """
-    print("+ Bienvenue dans l'API: GS15_api")
-    choice = input("+ Desirez-vous creer un compte (1) ou vous authentifier (2): ")
-
-    # Chargement ou initialisation des utilisateurs
-    try:
-        utilisateurs = utilisateur.charger_donnees(database)
-    except:
-        utilisateurs = []
-
-    # Boucle de saisie de choix
-    while choice not in ["1", "2"]:
-        print("+ ERREUR: saisie incorrecte !\n+ Usage: 1-Creation de compte, 2-Authentifier")
-        choice = input("+ Desirez-vous creer un compte (1) ou vous authentifier (2): ")
-
-    # Création de compte ou authentification
-    if choice == "1":
-        # Code pour la création de compte...
-        user = utilisateur()
-        utilisateurs.append(user)
-        user.sauvegarder_donnees(utilisateurs,database)
-        print("+ Notez les informations pour vous authentifier:\n\tUsername: "+user.getName()+"\n\tPrivate Key: \n"+user.getPrivateKey()+"\n\Public Key: \n"+user.getPublicKey())
-    elif choice == "2":
-        # Code pour l'authentification...
-        utilisateurs = utilisateur.charger_donnees("database.json")
-        test = True
-        while test:
-            name = input("+ Saisir votre nom d'utilisateur: ")
-            pKey = input("+ Saisir votre clé privée: ")
-            for u in utilisateurs:
-                print(parseRSA(u.getPrivateKey()))
-                if u.getName() == name and parseRSA(u.getPrivateKey()) == (pKey):
-                    test = False
-                    user = u
-                    print("+ Authentification reussie")
-            if test:
-                print("+ ERREUR: Echec de l'authentification.")
-        print("+ Bonjour "+user.getName()+" bienvenue dans l'API GS15_api")
-    
-    # Simuler un test de Guillou-Quisquater
-    ca = autoriteCert("CA")  # Création d'une instance de l'autorité de certification
-
-    # On récupere les valeurs de l'autorite de certification
-    e,n = getElementsFromKey(ca.getPublicKey())  # Exemple d'exposant public
-    d,n = getElementsFromKey(ca.getPrivateKey())# Exemple de module RSA
-
-    # Exemple de valeurs
-    #n = # Le module RSA
-    #v = # Exposant de vérification (doit être convenu ou choisi)
-    S_A = d# Signature d'Alice (représentant la clé privée)
-    J_A = e# Clé publique d'Alice (correspondant à la signature)
-
-    # Étape d'engagement
-    r, x = guillouQuisquaterEngagement(e, n, S_A)
-    print("Engagement: ", x)
-
-    # Étape de défi
-    e = guillouQuisquaterDefi(e)
-    print("Défi: ", e)
-
-    # Étape de réponse
-    y = guillouQuisquaterReponse(r, S_A, e, n)
-    print("Réponse: ", y)
-
-    # Étape de vérification
-    if guillouQuisquaterVerification(x, J_A, e, y, v, n):
-        print("Vérification réussie.")
-    else:
-        print("Échec de la vérification.")
-    """

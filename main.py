@@ -1,13 +1,12 @@
 from Scripts import Menu_interactions as menu
-import os
 
 # Press the green button in the gutter to run the script.
+
 #Test Commit
 def print_menu(options) :
     for key in options.keys() :
         print('[',key,']    ',options[key])
     return input("Enter your choice :   ")
-
 if __name__ == '__main__':
     options = {
         1: 'Encrypt/Decrypt a message',
@@ -20,7 +19,6 @@ if __name__ == '__main__':
     }
 
     while True :
-        os.system('cls')
         choice = print_menu(options)
         menu.check_choice(choice)
 

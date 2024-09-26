@@ -1,12 +1,19 @@
 #CE SCRIPT comptient :  La génération des demandes de certificats (CSR) -- La génération des certificats -- La signature des certificats
 #---Hash Input message
-from keygen import getElementsFromKey,parseRSA,generateRSA,stringToBase64,base64ToString
-from user import autoriteCert,utilisateur
-import os
-from datetime import date
-from utils import *
 
-fichier='database.json'
+from Scripts.keygen import getElementsFromKey,parseRSA,generateRSA,stringToBase64,base64ToString
+from Scripts.user import autoriteCert,utilisateur,autoriteSequ,authenticate
+from Scripts.utils import *
+
+import os,time
+from datetime import date
+
+#-----------------------------------------------------------------------------------------PATHS
+database='./Resources\database.json'
+PATH_DEPOT='./Resources\depot/'
+PATH_CSR_DEPOT='./Resources\depot_csr/'
+PATH_KEY="./Resources/key/"
+
 #-----------------------------------------------------------------------------------------CSR FUNCTIONS
 def changeField(champ_a_modifier,valeur_du_champ,text_cert):
     lignes = ""
@@ -21,18 +28,18 @@ def changeField(champ_a_modifier,valeur_du_champ,text_cert):
 #--- Fonction qui permet de vérifier l'authenticite d'un CSR en regardant si la signature du demandeur correspond à une signature de la db.json
 def verifyCSR(pathCSR):
     # Lire le contenu du CSR
-    with open(pathCSR, "r") as file:
+    with open(PATH_CSR_DEPOT+pathCSR, "r") as file:
         csrContent = base64ToString(parseCSR(file.read()))
     
     # Afficher le CSR
-    print("Contenu de la demande de certificat:")
-    print(csrContent)
+    #print("Contenu de la demande de certificat:")
+    #print(csrContent)
 
     # Extraire la signature du CSR
     csrSignature = extraire_signature_valeur(csrContent)
-    print(csrSignature)
+    #print(csrSignature)
 
-    utilisateurs = utilisateur.charger_donnees(fichier)
+    utilisateurs = utilisateur.charger_donnees(database)
     
     # Vérifier la signature
     for user in utilisateurs:
@@ -40,10 +47,10 @@ def verifyCSR(pathCSR):
         expectedSignature = user.signature()        
         #print(expectedSignature)
         if csrSignature == expectedSignature:
-            print(f"Le certificat est valide. Correspond à l'utilisateur: {user.getName()}")
+            print(f"+ Certificate is valid. Match to user: {user.getName()}")
             return True
 
-    print("Le certificat est invalide ou ne correspond à aucun utilisateur.")
+    print("+ Certificate is not valid.")
     return False
 #-----------------------------------------------------------------------------------------CERTIFICATS
 #--- Fonction qui permet de demander les informations générales à l'utilisateur
@@ -70,14 +77,14 @@ def getPrivateSignature():
     if hasCert == "O":
         #---Si l'utilisateur possede une paire de clés RSA on ajoute le hash de la clé privée
         pathRSA=input("+ Saisir le chemin de votre clé privée: ")
-        with open(pathRSA, "r") as fRSA:
+        with open(PATH_KEY+pathRSA, "r") as fRSA:
             signRSA=parseRSA(fRSA.read())
         return sha256(signRSA)
     else:
         #---Si l'utilisateur ne possede pas de clés RSA on génère une paire de clés et on récupère le hash de sa clé publique
         print("+ Création d'une paire de clés RSA")
         nameKey = generateRSA()
-        with open(nameKey+"_private.key", "r") as fRSA:
+        with open(PATH_KEY+nameKey+"_private.key", "r") as fRSA:
             signRSA=parseRSA(fRSA.read())
         return sha256(signRSA)
         #APPEL DE LA FONCTION DE CREATION DES CLES RSA
@@ -90,15 +97,15 @@ def getPublicKey():
     return e,n
 
 #--- Fonction qui permet de générer une demande de signature de certificat (CSR)
-def generateCertificate():
+def generateCertificate(user):
     nameCSR = input("+ Entrez le nom du certificat : ")
-    with open(nameCSR+".txt","w") as ftextCSR:
+    with open(PATH_CSR_DEPOT+nameCSR+".txt","w") as ftextCSR:
         print("-----")
         print("You are about to be asked to enter information that will be incorporated into your certificate request. What you are about to enter is what is called a Distinguished Name or a DN. There are quite a few fields but you can leave some blank. For some fields there will be a default value.")
         print("-----")
         #--- Collect informations
-        hashRSA = getPrivateSignature()
-        e,n = getPublicKey()
+        hashRSA = user.signature()
+        e,n = getElementsFromKey(user.pubKey)
         resultString = askUser()
         #--- Write the certificate
         ftextCSR.write("Certificate Request:")
@@ -116,45 +123,46 @@ def generateCertificate():
         #SIGNATURE NUMERIQUE DE L'ENTITE GENERANT LE CERTIFICAT (En Hexadecimal)
         ftextCSR.write("\n\t\t\tSignature Algorithm: sha256WithRSAEncryption")
         ftextCSR.write("\n\t\t\tSignature Value: "+hashRSA)
-    with open(nameCSR+".csr","w") as fCSR:
+    with open(PATH_CSR_DEPOT+nameCSR+".csr","w") as fCSR:
         fCSR.write("-----BEGIN CERTIFICATE REQUEST-----\n")
-        with open(nameCSR+".txt","r") as ftextCSR:
+        with open(PATH_CSR_DEPOT+nameCSR+".txt","r") as ftextCSR:
             fCSR.write(stringToBase64(ftextCSR.read()))
         fCSR.write("\n-----END CERTIFICATE REQUEST-----")
-    os.remove(nameCSR+".txt")
+    os.remove(PATH_CSR_DEPOT+nameCSR+".txt")
 
 #--- Fonction qui permet de signer un certificat
-def signCSR(autorite):
-    pathCSR = input("+ Saisir le chemin de la demande de signature que vous souhaitez signer: ")
+def signCSR(autorite,autorite_sequ):
+    if not autorite_sequ.afficherCSR():
+        time.sleep(3)
+        return
+    pathCSR = input("\n+ Saisir le chemin (relatif) de la demande de signature que vous souhaitez signer: ")
     print("_________________________________________________________")
-    print("\n+ Affichage du certificat de l'utilisateur")
-    print("_________________________________________________________")
-    with open(pathCSR, "r") as fCSR:
+    with open(PATH_CSR_DEPOT+pathCSR, "r") as fCSR:
         txtCSR = parseCSR(fCSR.read())
     print(base64ToString(txtCSR))
     print("_________________________________________________________")
-
-    isOk = input("+ Le certificat du demandeur est-il valide (O) ou (N): ")
-    while isOk not in ["O", "N"]:
-        print("+ ERREUR: saisie incorrecte !\n+ Usage: O-Oui, N-Non")
+    if verifyCSR(pathCSR):
         isOk = input("+ Le certificat du demandeur est-il valide (O) ou (N): ")
+        while isOk not in ["O", "N"]:
+            print("+ ERREUR: saisie incorrecte !\n+ Usage: O-Oui, N-Non")
+            isOk = input("+ Le certificat du demandeur est-il valide (O) ou (N): ")
 
-    if isOk == "O":
-        # Signature du certificat avec la clé privée de l'autorité de certification
-        signRSA = autorite.signature()
-        newTxtCsr = changeField("Signature Value", signRSA, base64ToString(txtCSR))
+        if isOk == "O":
+            # Signature du certificat avec la clé privée de l'autorité de certification
+            signRSA = autorite.signature()
+            newTxtCsr = changeField("Signature Value", signRSA, base64ToString(txtCSR))
 
-        # Ajout des champs date, expiration, et nom de l'autorité de certification
-        dateToday = date.today()
-        expiration = input("+ Quelle est la durée de validite du certificat (j): ")
-        newTxtCsr = newTxtCsr + "\n\t\t\tDate: "+str(dateToday)+"\n\t\t\tJ: "+expiration
-        newTxtCsr = newTxtCsr + "\n\t\t\tAutorité de Certification: "+autorite.getName()
+            # Ajout des champs date, expiration, et nom de l'autorité de certification
+            dateToday = date.today()
+            expiration = input("+ Quelle est la durée de validite du certificat (j): ")
+            newTxtCsr = newTxtCsr + "\n\t\t\tDate: "+str(dateToday)+"\n\t\t\tJ: "+expiration
+            newTxtCsr = newTxtCsr + "\n\t\t\tAutorité de Certification: "+autorite.getName()
 
-        os.remove(pathCSR)
-        with open(pathCSR, "w") as signedCert:
-            signedCert.write("-----BEGIN CERTIFICATE-----\n")
-            signedCert.write(stringToBase64(newTxtCsr))
-            signedCert.write("\n-----END CERTIFICATE-----")
+            os.remove(PATH_CSR_DEPOT+pathCSR)
+            with open(PATH_DEPOT+pathCSR, "w") as signedCert:
+                signedCert.write("-----BEGIN CERTIFICATE-----\n")
+                signedCert.write(stringToBase64(newTxtCsr))
+                signedCert.write("\n-----END CERTIFICATE-----")
 
         
 
@@ -166,11 +174,14 @@ if __name__ == '__main__':
         print("+ ERREUR: saisie incorrecte !\n+ Usage: 1-Generation de certificat, 2-Signature d'un certificat")
         choice = input("+ Voulez vous générer une requete de certificat (1), signer un certificat par une autorité de certification (2): ")
     if choice == "1":
-        generateCertificate()
+        user = authenticate()
+        generateCertificate(user)
         print("+ Le certificat a été généré avec succés.\n+ Fin du programme.")
         print("_________________________________________________________")
     elif choice == "2":
         autorite_cert = autoriteCert("GS15_ca")
+        autorite_sequ = autoriteSequ("GS15_seq")
+        autorite_sequ.afficherCSR()
         signCSR(autorite_cert)
         print("+ Fin du programme.")
         print("_________________________________________________________")

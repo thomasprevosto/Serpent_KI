@@ -1,11 +1,17 @@
-import random
-from utils import *
-#''' v1 du Script
+import random,time
+from Scripts.utils import *
+
+#''' v2 du Script
 #''' Fonctionnel
-#''' Améliorations potentielles :  Intégrer ASN.1 dans le format des clés pour plus de propreté.
-#                                  Réecrire la fonction inverseModulaire.
 #--- TEST of "petit théorème de Fermat" if number is primary
+PATH_KEY = "./Resources/key/"
+PATH_CIPHER = "./Resources/RSA_encryption/"
 def isProbablyPrimary(N):
+    """
+    Function isProbablyPrimary
+    N: Nombre que l'on test pour savoir si c'est un nombre (probablement) premier
+    Test : Si a^(N-1) ≡ 1 mod N, alors N est probablement premier
+    """
     k=5
     #--- k : nombre de tests
     #--- a un entier positif tel que a < N 
@@ -19,6 +25,10 @@ def isProbablyPrimary(N):
 
 #--- GENERATE random primary number of 1024 bits
 def generatePrimary1024():
+    """
+    Function generatePrimary1024
+        Generate random (probably) primary number 
+    """
     i=0
     while True:
         #--- GEN RANDOM 1024 Number
@@ -33,39 +43,47 @@ def generatePrimary1024():
 
 
 #--- Fonction utilisant l'Algorithme d'Euclide étendu et qui permet de calculer l'inverse modulaire
-def inverseModulaire(aModulo, bNombre):
-    
+def invertMod(aModulo, bNombre):
+    """
+    Function: invertMod
+        Calcul de l'inverse modulaire en utilisant l'Algorithme d'Euclide étendu
+        aModulo: Module
+        bModulo: Nombre dont on cherche à obtenir l'inverse 
+    """
     modulo = aModulo
-    
     x = 0
     y = 1
     u = 1
     v = 0
-    
     while bNombre != 0:
         q = aModulo // bNombre
         r = aModulo % bNombre
-        
         m = x - u * q
         n = y - v * q
-        
         aModulo = bNombre
         bNombre = r
         x = u
         y = v
         u = m
-        v = n
-        
+        v = n    
     return x % modulo if aModulo == 1 else 0
 
 def writePubKey(f):
+    """
+    Function: writePubKey
+        Text Parsing Function
+    """
     f.write("-----BEGIN PUBLIC KEY-----\n")
     f.write
 
 def generateRSA():
-    nameKey = input("+ Veuillez entrer le nom de la paire de clés : ")
-    fPubKey = open(nameKey+"_public.key","w")
-    fPriKey = open(nameKey+"_private.key","w")
+    """
+    Function: generateRSA
+        Generate a pair of RSA keys
+    """
+    nameKey = input("+ Enter the name of the pair of keys : ")
+    fPubKey = open(PATH_KEY+nameKey+"_public.key","w")
+    fPriKey = open(PATH_KEY+nameKey+"_private.key","w")
     p = generatePrimary1024()
     q = generatePrimary1024()
     while p==q:
@@ -78,8 +96,8 @@ def generateRSA():
     #print("+ phi(n)="+str(phiN))
     #--- e : Pow of ciphering // Pour l'instant e = 65537, dans un second temps on la calculera
     e = 65537
-    #--- d : Pow of deciphering -->  d ≡ e^(-1) mod φ(n) || A refaire
-    d= inverseModulaire(phiN, e)
+    #--- d : Pow of deciphering -->  d ≡ e^(-1) mod φ(n)
+    d= invertMod(phiN, e)
     #print("+ d = "+str(d))
     #--- Verification
     #ver = d*e % phiN
@@ -114,40 +132,45 @@ def generateRSA():
     fPriKey.write("\n-----END PRIVATE KEY-----")
     return nameKey
 
-#Fonction de chiffrement asymétrique à l'aide de clés RSA
-def cipherRSA():
-    print("+ Début du chiffrement asymétrique à l'aide de clés RSA")
-    path=input("+ Veuillez entrer le chemin de votre clé publique: ")
-    e,n = getElementsFromKey(path)
-    txt = input("+ Saisir votre message: ")
+# Asymmetric encryption function using RSA keys
+def cipherRSA(user):
+    print("+ Starting asymmetric encryption using RSA keys")
+    #path = input("+ Please enter the path of your public key: ")
+    e, n = getElementsFromKey(user.getPublicPathKey())
+    txt = input("+ Enter your message: ")
     txt_number = stringToInt(txt)
-    cipher_txt = pow(txt_number,e,n)
-    print(str(cipher_txt))
+    cipher_txt = pow(txt_number, e, n)
+    print("+ Cipher Text: \n"+str(cipher_txt))
+    cipherPath=input("+ Enter name of cipher message: ")
+    with open(PATH_CIPHER+cipherPath,"w") as fCIPHER:
+        fCIPHER.write(str(cipher_txt))
 
-def decipherRSA():
-    print("+ Début du dechiffrement asymetrique à l'aide de clés RSA")
-    path = input("+ Veuillez entrer le chemin de votre clé privée: ")
-    d,n = getElementsFromKey(path)
-    cipher_txt = int(input("+ Saisir le message chiffré: "))
-    txt = pow(cipher_txt,d,n)
-    print(intToString(txt))
+def decipherRSA(user):
+    print("+ Starting asymmetric decryption using RSA keys")
+    d, n = getElementsFromKey(user.getPrivatePathKey())
+    cipher_txt = int(input("+ Enter the encrypted message: "))
+    txt = pow(cipher_txt, d, n)
+    print("+ Clear Message: \n"+intToString(txt))
+    time.sleep(3)
+
 
 if __name__ == '__main__':
-    print("_________________________________________________________\n>>>> 2: Créer un couple de clés publique / privée <<<<")
-    choice = input("+ Bienvenue dans l'espace de génération des clés RSA\n+ Voulez vous générer une paire de clés RSA (1), chiffrer un message (2), déchiffrer un message (3): ")
+    print("_________________________________________________________\n>>>> 2: Create a Public/Private Key Pair <<<<")
+    choice = input("+ Welcome to the RSA key generation space\n+ Do you want to generate a RSA key pair (1), encrypt a message (2), decrypt a message (3): ")
     while choice != "1" and choice != "2" and choice != "3":
-        print("+ ERREUR: saisie incorrecte !\n+ Usage: 1-Generation de clés, 2-Chiffrement d'un message, 3-Dechiffrement d'un message")
-        choice = input("+ Voulez vous générer une paire de clés RSA (1), chiffrer un message (2), déchiffrer un message (3): ")
+        print("+ ERROR: incorrect entry!\n+ Usage: 1-Key Generation, 2-Message Encryption, 3-Message Decryption")
+        choice = input("+ Do you want to generate a RSA key pair (1), encrypt a message (2), decrypt a message (3): ")
     if choice == "1":
         generateRSA()
-        print("+ Les clés ont été générées avec succés.\n+ Fin du programme.")
+        print("+ The keys have been successfully generated.\n+ End of the program.")
         print("_________________________________________________________")
     elif choice == "2":
         cipherRSA()
-        print("+ Fin du programme.")
+        print("+ End of the program.")
         print("_________________________________________________________")
     elif choice == "3":
         decipherRSA()
-        print("+ Fin du programme.")
+        print("+ End of the program.")
         print("_________________________________________________________")
+
 
